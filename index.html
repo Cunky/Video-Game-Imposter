@@ -90,7 +90,7 @@ function turn(){
   if(S.revealed)return;S.revealed=true;
   var imp=S.roles[S.i];
   c.className='blk card'+(imp?' imp':'');
-  c.innerHTML=imp?'<div class="big">IMPOSTER</div><div class="tag">'+S.category+'</div><p>Your hint word</p><div class="big" style="font-size:24px">'+G[S.category][S.word]+'</div><p>Blend in. Do not repeat it exactly.</p>':'<div class="tag">'+S.category+'</div><div class="big">'+S.word+'</div><p>Give a clue without saying it.</p>';
+  c.innerHTML=imp?'<div class="big">IMPOSTER</div><div class="tag">'+S.category+'</div><p>Your hint word</p><div class="big" style="font-size:24px">'+G[S.category][S.word]+'</div><p>Blend in. Do not repeat it exactly. Unless your name is nick</p>':'<div class="tag">'+S.category+'</div><div class="big">'+S.word+'</div><p>Give a clue without saying it.</p>';
   var n=document.getElementById('next');n.classList.remove('hide');n.textContent=S.i===S.players-1?'Hide and finish':'Hide and pass to Player '+(S.i+2);
  }
  c.onclick=show;c.onkeydown=function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();show()}};
