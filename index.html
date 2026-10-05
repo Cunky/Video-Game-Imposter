@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Video Game Imposter</title>
+<link href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#e4e1da;--ink:#23252a;--panel:#f4f2ec;--edge:#23252a;--grass:#4f8a2e;--dirt:#7a5230;--red:#b8322a;--mute:#6b6e75;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1b1c1f;--ink:#e9e7e1;--panel:#2b2d31;--edge:#0d0d0f;--grass:#6cb043;--red:#e05a4f;--mute:#9a9da5}}
+:root[data-theme="dark"]{--bg:#1b1c1f;--ink:#e9e7e1;--panel:#2b2d31;--edge:#0d0d0f;--grass:#6cb043;--red:#e05a4f;--mute:#9a9da5}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Silkscreen',ui-monospace,Menlo,monospace;min-height:100vh;display:flex;justify-content:center}
+main{width:100%;max-width:440px;padding:20px 18px 28px;display:flex;flex-direction:column;gap:16px}
+h1{font-size:22px;margin:4px 0 0;line-height:1.2}
+p{margin:0;font-size:13px;line-height:1.5;color:var(--mute)}
+.blk{background:var(--panel);border:4px solid var(--edge);box-shadow:6px 6px 0 var(--edge);padding:16px}
+label{display:block;font-size:13px;margin-bottom:8px}
+.row{display:flex;align-items:center;gap:10px}
+.row+.row{margin-top:14px}
+select{width:100%;font:inherit;font-size:14px;padding:10px;background:var(--bg);color:var(--ink);border:3px solid var(--edge);border-radius:0}
+button{font:inherit;font-size:15px;color:var(--ink);background:var(--panel);border:4px solid var(--edge);box-shadow:4px 4px 0 var(--edge);padding:12px 14px;cursor:pointer;border-radius:0;min-height:48px}
+button:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--edge)}
+button:focus-visible,select:focus-visible{outline:3px solid var(--grass);outline-offset:2px}
+button.go{background:var(--grass);color:#fff;width:100%}
+button.sm{width:48px;padding:0;font-size:20px}
+.n{font-size:26px;min-width:36px;text-align:center}
+.card{min-height:300px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px;padding:22px;cursor:pointer;user-select:none;-webkit-user-select:none}
+.card .big{font-size:26px;line-height:1.2;overflow-wrap:anywhere}
+.card.imp{background:var(--red);color:#fff}
+.card.imp p{color:#fff}
+.tag{font-size:14px;background:var(--dirt);color:#fff;padding:4px 10px}
+.who{font-size:16px;text-align:center}
+.dots{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+.dots i{width:14px;height:14px;background:var(--bg);border:3px solid var(--edge)}
+.dots i.on{background:var(--grass)}
+.hide{display:none}
+</style>
+</head>
+<body>
+<main id="app"></main>
+<script>
+var G={
+"Shooters":{"Call of Duty":"killstreak","Halo":"covenant","Overwatch":"support","Valorant":"spike","Counter-Strike":"AWP","Apex Legends":"drop","Doom":"hell","Battlefield":"vehicles"},
+"Open world and RPG":{"Skyrim":"shouts","The Witcher 3":"silver","Elden Ring":"runes","GTA V":"Los Santos","Red Dead Redemption 2":"gang","Cyberpunk 2077":"Night City","Fallout":"wasteland","Baldur's Gate 3":"Larian"},
+"Nintendo":{"Mario Kart":"banana","Zelda: Breath of the Wild":"Hyrule","Animal Crossing":"villagers","Smash Bros":"fighters","Pokemon":"trainer","Splatoon":"turf","Kirby":"puffball","Metroid":"space"},
+"Sandbox and survival":{"Minecraft":"crafting","Terraria":"biomes","Roblox":"avatar","Fortnite":"storm","Rust":"base","Stardew Valley":"farm","Among Us":"sus","Subnautica":"depths"},
+"Sports and racing":{"FIFA":"pitch","NBA 2K":"MyCareer","Rocket League":"boost","Forza Horizon":"festival","Gran Turismo":"Polyphony","Madden":"franchise","Mario Golf":"fairway","Need for Speed":"cops"},
+"Indie and story":{"Hollow Knight":"bugs","Celeste":"climb","Hades":"Olympus","Undertale":"mercy","The Last of Us":"fungus","God of War":"Norse","Portal":"turrets","Cuphead":"1930s"},
+"Online multiplayer":{"League of Legends":"rift","Dota 2":"roshan","World of Warcraft":"raids","Genshin Impact":"gacha","Fall Guys":"crowns","Dead by Daylight":"killer","Rainbow Six Siege":"breach","Destiny 2":"guardians"}
+};
+var S={players:5,imps:1,cat:"Any",word:"",category:"",roles:[],i:0,revealed:false,used:{}};
+var app=document.getElementById('app');
+function pick(a){return a[Math.floor(Math.random()*a.length)]}
+function setup(){
+ var opts='<option value="Any">Any category</option>'+Object.keys(G).map(function(c){return '<option'+(c===S.cat?' selected':'')+'>'+c+'</option>'}).join('');
+ app.innerHTML='<h1>Video Game Imposter</h1><p>Set up, then pass the phone. Each player taps their card in private. Imposters get a hint word.</p>'+
+ '<div class="blk"><label>Players</label><div class="row"><button class="sm" id="pm" aria-label="Fewer players">-</button><div class="n" id="pn">'+S.players+'</div><button class="sm" id="pp" aria-label="More players">+</button></div>'+
+ '<div class="row"><div style="flex:1"><label>Imposters</label></div><button class="sm" id="im" aria-label="Fewer imposters">-</button><div class="n" id="in">'+S.imps+'</div><button class="sm" id="ip" aria-label="More imposters">+</button></div></div>'+
+ '<div class="blk"><label for="cat">Category</label><select id="cat">'+opts+'</select></div>'+
+ '<button class="go" id="start">Deal cards</button>';
+ function refresh(){S.imps=Math.min(S.imps,Math.max(1,Math.floor((S.players-1)/2)));document.getElementById('pn').textContent=S.players;document.getElementById('in').textContent=S.imps}
+ document.getElementById('pm').onclick=function(){S.players=Math.max(3,S.players-1);refresh()};
+ document.getElementById('pp').onclick=function(){S.players=Math.min(12,S.players+1);refresh()};
+ document.getElementById('im').onclick=function(){S.imps=Math.max(1,S.imps-1);refresh()};
+ document.getElementById('ip').onclick=function(){S.imps=Math.min(Math.max(1,Math.floor((S.players-1)/2)),S.imps+1);refresh()};
+ document.getElementById('cat').onchange=function(e){S.cat=e.target.value};
+ document.getElementById('start').onclick=deal;
+ refresh();
+}
+function deal(){
+ S.category=S.cat==="Any"?pick(Object.keys(G)):S.cat;
+ var pool=Object.keys(G[S.category]).filter(function(w){return !S.used[w]});
+ if(!pool.length){S.used={};pool=Object.keys(G[S.category])}
+ S.word=pick(pool);S.used[S.word]=1;
+ var r=[];for(var k=0;k<S.players;k++)r.push(k<S.imps?1:0);
+ for(var j=r.length-1;j>0;j--){var x=Math.floor(Math.random()*(j+1));var t=r[j];r[j]=r[x];r[x]=t}
+ S.roles=r;S.i=0;S.revealed=false;turn();
+}
+function dots(){var h='';for(var k=0;k<S.players;k++)h+='<i class="'+(k<S.i?'on':'')+'"></i>';return '<div class="dots">'+h+'</div>'}
+function turn(){
+ if(S.i>=S.players){return done()}
+ app.innerHTML=dots()+'<div class="who">Player '+(S.i+1)+'</div>'+
+ '<div class="blk card" id="card" role="button" tabindex="0"><div class="big">Tap to reveal</div><p>Make sure only you can see the screen.</p></div>'+
+ '<button class="go hide" id="next">Hide and pass</button>';
+ var c=document.getElementById('card');
+ function show(){
+  if(S.revealed)return;S.revealed=true;
+  var imp=S.roles[S.i];
+  c.className='blk card'+(imp?' imp':'');
+  c.innerHTML=imp?'<div class="big">IMPOSTER</div><div class="tag">'+S.category+'</div><p>Your hint word</p><div class="big" style="font-size:24px">'+G[S.category][S.word]+'</div><p>Blend in. Do not repeat it exactly.</p>':'<div class="tag">'+S.category+'</div><div class="big">'+S.word+'</div><p>Give a clue without saying it.</p>';
+  var n=document.getElementById('next');n.classList.remove('hide');n.textContent=S.i===S.players-1?'Hide and finish':'Hide and pass to Player '+(S.i+2);
+ }
+ c.onclick=show;c.onkeydown=function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();show()}};
+ document.getElementById('next').onclick=function(){S.i++;S.revealed=false;turn()};
+}
+function done(){
+ var first=Math.floor(Math.random()*S.players)+1;
+ app.innerHTML='<h1>All cards dealt</h1><div class="blk"><p style="color:var(--ink)">Player '+first+' gives the first clue. One word each, go around, then discuss and vote.</p></div>'+
+ '<div class="blk card" id="ans" role="button" tabindex="0" style="min-height:150px"><div class="big">Reveal answer</div><p>Tap after the vote.</p></div>'+
+ '<button class="go" id="again">New round</button><button id="back">Change settings</button>';
+ var a=document.getElementById('ans');
+ function rev(){
+  var who=[];S.roles.forEach(function(r,k){if(r)who.push(k+1)});
+  a.innerHTML='<div class="tag">'+S.category+'</div><div class="big">'+S.word+'</div><p>Imposter'+(who.length>1?'s':'')+': Player '+who.join(' and ')+'</p>';
+ }
+ a.onclick=rev;a.onkeydown=function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();rev()}};
+ document.getElementById('again').onclick=deal;
+ document.getElementById('back').onclick=setup;
+}
+setup();
+</script>
+</body>
+</html>
